@@ -492,7 +492,8 @@ typedef struct SalAuthInfo{
 typedef void (*SalOnCallReceived)(SalOp *op);
 typedef void (*SalOnCallRinging)(SalOp *op);
 typedef void (*SalOnCallAccepted)(SalOp *op);
-typedef void (*SalOnCallAck)(SalOp *op);
+typedef void (*SalOnCallAckReceived)(SalOp *op, SalCustomHeader *ack);
+typedef void (*SalOnCallAckBeingSent)(SalOp *op, SalCustomHeader *ack);
 typedef void (*SalOnCallUpdating)(SalOp *op, bool_t is_update);/*< Called when a reINVITE/UPDATE is received*/
 typedef void (*SalOnCallTerminated)(SalOp *op, const char *from);
 typedef void (*SalOnCallFailure)(SalOp *op);
@@ -532,7 +533,8 @@ typedef struct SalCallbacks{
 	SalOnCallReceived call_rejected;
 	SalOnCallRinging call_ringing;
 	SalOnCallAccepted call_accepted;
-	SalOnCallAck call_ack;
+	SalOnCallAckReceived call_ack_received;
+	SalOnCallAckBeingSent call_ack_being_sent;
 	SalOnCallUpdating call_updating;
 	SalOnCallTerminated call_terminated;
 	SalOnCallFailure call_failure;
@@ -661,7 +663,7 @@ const char *sal_get_root_ca(Sal* ctx);
 void sal_verify_server_certificates(Sal *ctx, bool_t verify);
 void sal_verify_server_cn(Sal *ctx, bool_t verify);
 void sal_set_ssl_config(Sal *ctx, void *ssl_config);
-void sal_set_uuid(Sal*ctx, const char *uuid);
+LINPHONE_PUBLIC void sal_set_uuid(Sal*ctx, const char *uuid);
 int sal_create_uuid(Sal*ctx, char *uuid, size_t len);
 int sal_generate_uuid(char *uuid, size_t len);
 LINPHONE_PUBLIC void sal_enable_test_features(Sal*ctx, bool_t enabled);
@@ -861,6 +863,8 @@ LINPHONE_PUBLIC SalResolverContext * sal_resolve_a(Sal* sal, const char *name, i
 LINPHONE_PUBLIC SalResolverContext * sal_resolve(Sal *sal, const char *service, const char *transport, const char *name, int port, int family, SalResolverCallback cb, void *data);
 void sal_resolve_cancel(SalResolverContext *ctx);
 
+SalCustomHeader *sal_custom_header_ref(SalCustomHeader *ch);
+void sal_custom_header_unref(SalCustomHeader *ch);
 SalCustomHeader *sal_custom_header_append(SalCustomHeader *ch, const char *name, const char *value);
 const char *sal_custom_header_find(const SalCustomHeader *ch, const char *name);
 SalCustomHeader *sal_custom_header_remove(SalCustomHeader *ch, const char *name);

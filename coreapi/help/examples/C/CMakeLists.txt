@@ -19,20 +19,26 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 ############################################################################
+if (ENABLE_TOOLS)
+	set(USE_BUNDLE )
+	if (IOS)
+		set(USE_BUNDLE MACOSX_BUNDLE)
+	endif()
+	file(GLOB EXECUTABLES_SOURCE RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.c")
+	foreach(EXECUTABLE ${EXECUTABLES_SOURCE})
+		string(REPLACE ".c" "" EXECUTABLE_NAME ${EXECUTABLE})
+		bc_apply_compile_flags(${EXECUTABLE} STRICT_OPTIONS_CPP STRICT_OPTIONS_C)
+		add_executable(${EXECUTABLE_NAME} ${USE_BUNDLE} ${EXECUTABLE})
+		target_link_libraries(${EXECUTABLE_NAME} ${LINPHONE_LIBS_FOR_TOOLS} ${MEDIASTREAMER2_LIBRARIES} ${ORTP_LIBRARIES})
+		set_target_properties(${EXECUTABLE_NAME} PROPERTIES LINK_FLAGS "${LINPHONE_LDFLAGS}")
+		if (NOT IOS)
+			install(TARGETS ${EXECUTABLE_NAME}
+				RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+				LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+				ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+				PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+			)
+		endif()
+	endforeach()
+endif()
 
-add_custom_command(OUTPUT LinphoneWrapper.cs
-	COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/genwrapper.py" "${PROJECT_BINARY_DIR}/coreapi/help/doc/doxygen/xml"
-	DEPENDS ${PROJECT_SOURCE_DIR}/tools/genapixml.py
-	${PROJECT_SOURCE_DIR}/tools/metadoc.py
-	${PROJECT_SOURCE_DIR}/tools/abstractapi.py
-	genwrapper.py
-	wrapper_impl.mustache
-	linphone-doc
-	"${PROJECT_BINARY_DIR}/coreapi/help/doc/doxygen/xml/index.xml"
-)
-
-add_custom_target(linphonecs ALL DEPENDS LinphoneWrapper.cs)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/LinphoneWrapper.cs
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/linphonecs
-)

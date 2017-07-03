@@ -20,19 +20,23 @@
 #
 ############################################################################
 
-add_custom_command(OUTPUT LinphoneWrapper.cs
-	COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/genwrapper.py" "${PROJECT_BINARY_DIR}/coreapi/help/doc/doxygen/xml"
-	DEPENDS ${PROJECT_SOURCE_DIR}/tools/genapixml.py
-	${PROJECT_SOURCE_DIR}/tools/metadoc.py
-	${PROJECT_SOURCE_DIR}/tools/abstractapi.py
-	genwrapper.py
-	wrapper_impl.mustache
-	linphone-doc
-	"${PROJECT_BINARY_DIR}/coreapi/help/doc/doxygen/xml/index.xml"
-)
+add_subdirectory(doxygen)
 
-add_custom_target(linphonecs ALL DEPENDS LinphoneWrapper.cs)
-
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/LinphoneWrapper.cs
-        DESTINATION ${CMAKE_INSTALL_DATADIR}/linphonecs
-)
+if(ENABLE_JAVADOC)
+        find_package(Java REQUIRED)
+        set(JAVADOC_PACKAGES "org.linphone.core org.linphone.mediastream")
+        set(JAVADOC_CLASSPATHS
+                "${PROJECT_SOURCE_DIR}/java/common"
+                "${PROJECT_SOURCE_DIR}/java/j2se"
+                "${PROJECT_SOURCE_DIR}/mediastreamer2/java/src"
+        )
+        string(REPLACE ";" ":" JAVADOC_CLASSPATHS "${JAVADOC_CLASSPATHS}")
+        set(JAVADOC_TITLE "Linphone SDK ${PROJECT_VERSION} reference documentation")
+        set(JAVADOC_JAVA_REFERENCE "http://docs.oracle.com/javase/8/docs/api/")
+        set(JAVADOC_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/doc/java")
+        set(JAVADOC_LOGFILE "${CMAKE_CURRENT_BINARY_DIR}/javadoc.log")
+        configure_file("generate_javadoc.sh.in" "generate_javadoc.sh" @ONLY)
+        add_custom_target(javadoc ALL
+                COMMAND "${CMAKE_CURRENT_BINARY_DIR}/generate_javadoc.sh"
+        )
+endif()
